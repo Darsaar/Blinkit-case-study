@@ -1,0 +1,23 @@
+sku_id,sku_name,category,shelf_life_days
+M001,Toned Milk 500ml,Milk,2
+M002,Full Cream Milk 500ml,Milk,2
+M003,Toned Milk 1L,Milk,2
+M004,Double Toned Milk 500ml,Milk,2
+M005,Cow Milk 500ml,Milk,2
+M006,Buffalo Milk 500ml,Milk,2
+M007,Slim Milk 500ml,Milk,2
+M008,Curd 400g,Milk,2
+F001,Onion 1kg,FnV,7
+F002,Tomato 500g,FnV,2
+F003,Potato 1kg,FnV,5
+F004,Banana Robusta 6pc,FnV,2
+F005,Coriander Bunch,FnV,2
+F006,Green Chilli 100g,FnV,5
+F007,Carrot 500g,FnV,7
+F008,Cucumber 500g,FnV,5
+F009,Lemon 4pc,FnV,7
+F010,Apple Shimla 4pc,FnV,5
+F011,Ginger 100g,FnV,7
+F012,Beans 250g,FnV,5
+F013,Capsicum 250g,FnV,2
+F014,Spinach Bunch,FnV,7
