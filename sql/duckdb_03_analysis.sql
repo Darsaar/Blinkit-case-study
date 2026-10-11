@@ -195,6 +195,29 @@ WHERE city = 'Coimbatore' AND is_old_store_open
 GROUP BY category, week
 ORDER BY category, week;
 
+-- A13b. Wastage over time: old vs new stores, by category (Coimbatore, open days)
+-- Expect: old-store FnV flat ~11% all 8 weeks; new-store FnV climbs 4% -> 3% -> 10% -> 12%
+--         (new stores already waste as much FnV as old ones by week 8);
+--         old-store Milk ~1.4% -> ~0.4% from week 6 (starved, nothing left to dump)
+SELECT CASE WHEN is_new_store THEN 'new' ELSE 'old' END AS store_group,
+       category, week,
+       SUM(units_dumped) AS dumped,
+       ROUND(100.0 * SUM(units_dumped) / SUM(units_sold + units_dumped), 2) AS wastage_pct
+FROM daily_clean
+WHERE city = 'Coimbatore' AND NOT is_closed
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3;
+
+-- A13c. Daily milk wastage around the break (old stores, open days, weeks 5-6)
+-- Expect: ~1.2-1.8% every day up to 9 Aug, ~0.3% from Mon 10 Aug -> same day as the V03 drop
+SELECT strftime(date, '%Y-%m-%d') AS day,
+       ROUND(100.0 * SUM(units_dumped) / SUM(units_sold + units_dumped), 2) AS milk_wastage_pct
+FROM daily_clean
+WHERE city = 'Coimbatore' AND is_old_store_open AND category = 'Milk'
+  AND date BETWEEN DATE '2026-08-03' AND DATE '2026-08-16'
+GROUP BY date
+ORDER BY date;
+
 -- A14. Salem control: availability and wastage by category and week
 -- Expect: flat ~94-97 availability; one wastage spike in FnV week 7
 SELECT category, week,
@@ -233,7 +256,8 @@ GROUP BY category;
 -- =============== PHASE 10: Red herrings ===============
 
 -- A17. Biggest single-day dumping by city
--- Expect: Salem 20 Aug ~4,400 units vs ~700 on a normal day (one-off)
+-- Expect: Salem 20 Aug ~4,400 units vs ~700 on a normal day (one-off; all 10 Salem
+--         stores, almost all FnV -> a city-wide FnV event in Salem, not Coimbatore)
 SELECT strftime(date, '%Y-%m-%d') AS day, city, SUM(units_dumped) AS dumped
 FROM daily_clean
 GROUP BY date, city
