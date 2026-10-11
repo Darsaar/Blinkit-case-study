@@ -50,6 +50,7 @@ The manager's message contains **4 testable claims**:
 | 6 | **Dumped while 0 hours in stock** (35 rows) | Looks odd, but plausible (stock expired, then ran out) | Keep and mention |
 | 7 | **Sold + dumped > received** on some days | Stock carries over between days | Don't assume each day starts from zero |
 | 8 | Duplicates, missing days, negative values, received > ordered | Checked; none found | Mention that you checked |
+| 9 | **Date columns loaded as numbers** (epoch milliseconds, e.g. `1783296000000`) by some import tools | Date arithmetic fails: "Unimplemented type for cast (BIGINT -> DATE)" | Convert every date column to `DATE` first (Step 1b of `duckdb_01_setup_and_clean.sql`); safe to run whatever the column type |
 
 **Output:** a clean daily table, a clean PO table and a clean GRN table, each with flags for *closed*, *new store* and *old store open*, plus a "data issues" note for the submission.
 
