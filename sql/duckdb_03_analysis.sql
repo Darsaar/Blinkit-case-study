@@ -115,6 +115,23 @@ WHERE vendor_id = 'V03' AND po_status = 'CONFIRMED'
 GROUP BY po_date
 ORDER BY po_date;
 
+-- A9b. Find the break day automatically: biggest day-on-day change in V03 fill rate
+-- Expect: 2026-08-10 first, change -26.3 (97.2 -> 70.9); every other day moves < 1 point
+WITH v03_daily AS (
+  SELECT po_date,
+         ROUND(100.0 * SUM(received_qty) / SUM(po_qty), 1) AS fill_rate
+  FROM po_clean
+  WHERE vendor_id = 'V03' AND po_status = 'CONFIRMED'
+  GROUP BY po_date
+)
+SELECT strftime(po_date, '%Y-%m-%d') AS po_day,
+       fill_rate,
+       LAG(fill_rate) OVER (ORDER BY po_date)                       AS prev_day,
+       ROUND(fill_rate - LAG(fill_rate) OVER (ORDER BY po_date), 1) AS change
+FROM v03_daily
+ORDER BY ABS(fill_rate - LAG(fill_rate) OVER (ORDER BY po_date)) DESC NULLS LAST
+LIMIT 5;
+
 -- A10. V03 fill rate before vs after, by SKU and by store
 -- Expect: every SKU and every store ~97 -> ~71
 SELECT sku_id,
