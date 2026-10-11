@@ -117,11 +117,14 @@ The manager's message contains **4 testable claims**:
 
 **Goal:** show what the plan would actually do.
 
-- **Lost sales:** sales rate per in-stock hour × out-of-stock hours. About **7k milk units a week** are lost; FnV loses about 2k a week, mostly at new stores.
-- **FnV +20%:** about **15k extra units a week** against only about 2k of lost sales. Most of the extra would be dumped, on top of FnV's existing ~11% wastage.
-- **Milk +20%:** 71% × 1.2 ≈ 85% of what's needed. Still short, and it hides the vendor issue while you pay for the extra orders.
-- **Shelf life:** milk lasts 2 days, so stock can't be buffered against a vendor that keeps short-shipping.
-- **Verdict:** wasteful for FnV and the wrong lever for milk.
+Baseline: the latest week (week 8), Coimbatore, open days. Units only (the data has no prices).
+
+- **Extra needed (unmet demand):** sales rate per in-stock hour × out-of-stock hours. Milk ≈ **7.2k units a week** (old stores 5.6k, new stores 1.5k). FnV ≈ 1.5k a week.
+- **Cross-check:** old-store milk sales fell from 250 to 197 per store-day; × 15 stores × 7 days ≈ 5.6k a week, the same as the unmet-demand estimate.
+- **FnV +20%:** adds ≈ **16.7k units a week**, but only ≈ 1.5k would sell, so ≈ **15.1k (about 91% of the extra) would be wasted**, on top of the ~11–12% FnV wastage there already is.
+- **Milk +20%:** V03 cuts every order by the same %, so +20% ordered → +20% received ≈ **5.3k units a week. All of it would sell** (milk wastage is now ~0.5%), but ≈ **1.9k a week would still be unmet**. Closing the full gap needs ≈ +27% more milk received.
+- **Risk on milk:** the uplift only works while V03 keeps short-shipping. If V03 recovers to ~97%, a standing +20% on 2-day-shelf-life milk turns straight into waste. It also hides the vendor problem.
+- **Verdict:** the plan is pure waste for FnV. For milk it helps as a **temporary stopgap**, but it must be tied to V03's fill rate and reviewed daily, while the vendor issue is fixed.
 
 ---
 
@@ -145,7 +148,7 @@ The manager's message contains **4 testable claims**:
 
 1. The real drop is about 6 points, entirely in milk, from 10 Aug. The rest is closures and new stores.
 2. The cause is vendor V03 delivering ~71% of milk orders (down from ~97%) at every store and SKU.
-3. +20% would waste about 15k FnV units a week and wouldn't fix milk. Fix supply instead.
+3. +20% on FnV would waste ~15k units a week. For milk, a temporary uplift tied to V03's fill rate recovers most lost sales while the vendor is fixed.
 
 **Actions:**
 
@@ -154,7 +157,7 @@ The manager's message contains **4 testable claims**:
 | 1 | Cancel the +20% FnV uplift | Supply planning | Before Monday's POs |
 | 2 | Escalate the V03 shortfall with the vendor and get a recovery date | Category / vendor management | Monday |
 | 3 | Set up a backup milk supply for Coimbatore (e.g. V04) | Category / sourcing | This week |
-| 4 | If needed, a temporary, milk-only top-up reviewed daily, not a blanket +20% | Supply planning | Interim |
+| 4 | Temporary milk-only uplift (~+20–27%) while V03 short-ships; review daily and remove as soon as V03's fill rate recovers | Supply planning | From Monday, interim |
 | 5 | Report new stores and closures separately in availability reporting | Analytics | Ongoing |
 
 **Monitor next week:** V03 daily fill rate, old-store open-day milk availability, FnV wastage.

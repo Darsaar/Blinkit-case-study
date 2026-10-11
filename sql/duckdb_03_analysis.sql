@@ -243,14 +243,70 @@ FROM daily_clean
 WHERE city = 'Coimbatore' AND NOT is_closed AND date >= DATE '2026-08-10'
 GROUP BY category;
 
--- A16. Extra units a week that +20% would add (Coimbatore, weeks 6-8)
--- Expect: FnV ~76,500 received/week -> ~15,300 extra; Milk ~24,700 -> ~4,900 extra
+-- A16. What the +20% plan would do, using the latest week (week 8) as the baseline
+-- extra_needed       = unmet demand: sales rate per in-stock hour x hours out of stock
+-- extra_from_plus_20 = 20% more received (V03 cuts orders proportionally, see A11,
+--                      so 20% more ordered -> 20% more received)
+-- extra_that_sells   = the smaller of the two; the rest of the extra is wasted
+-- Units only: the data has no prices, so multiply by unit cost to get money.
+-- Expect (week 8):
+--   FnV  old: needed ~1.2k, +20% adds ~13.0k -> ~11.8k wasted (~91% of the extra)
+--   FnV  new: needed ~0.3k, +20% adds ~3.7k  -> ~3.3k wasted (~91%)
+--   Milk old: needed ~5.6k, +20% adds ~4.2k  -> all sells, ~1.5k still unmet
+--   Milk new: needed ~1.5k, +20% adds ~1.2k  -> all sells, ~0.4k still unmet
+WITH shelf AS (
+  SELECT category,
+         CASE WHEN is_new_store THEN 'new' ELSE 'old' END AS store_group,
+         SUM(units_sold)   AS sold,
+         SUM(units_dumped) AS dumped,
+         SUM(CASE WHEN in_stock_hours > 0
+                  THEN units_sold / in_stock_hours * (operating_hours - in_stock_hours)
+                  ELSE 0 END) AS lost_sales
+  FROM daily_clean
+  WHERE city = 'Coimbatore' AND NOT is_closed AND week = 8
+  GROUP BY 1, 2
+),
+supply AS (
+  SELECT category,
+         CASE WHEN is_new_store THEN 'new' ELSE 'old' END AS store_group,
+         SUM(po_qty)       AS ordered,
+         SUM(received_qty) AS received
+  FROM po_clean
+  WHERE city = 'Coimbatore' AND po_status = 'CONFIRMED' AND week = 8
+  GROUP BY 1, 2
+),
+plan AS (
+  SELECT s.category, s.store_group,
+         p.ordered, p.received, s.sold, s.dumped,
+         s.lost_sales                    AS extra_needed,
+         0.2 * p.received                AS extra_from_plan
+  FROM shelf s JOIN supply p USING (category, store_group)
+)
+SELECT category, store_group,
+       received                                                   AS received_wk8,
+       ROUND(100.0 * dumped / (sold + dumped), 1)                 AS wastage_pct_now,
+       ROUND(extra_needed)                                        AS extra_needed,
+       ROUND(extra_from_plan)                                     AS extra_from_plus_20,
+       ROUND(LEAST(extra_from_plan, extra_needed))                AS extra_that_sells,
+       ROUND(extra_from_plan - LEAST(extra_from_plan, extra_needed)) AS extra_wasted,
+       ROUND(100.0 * (extra_from_plan - LEAST(extra_from_plan, extra_needed)) / extra_from_plan, 1) AS pct_of_extra_wasted,
+       ROUND(GREATEST(extra_needed - extra_from_plan, 0))         AS demand_still_unmet
+FROM plan
+ORDER BY category, store_group;
+
+-- A16b. Cross-check of milk demand gap: old stores' sales per store-day, before vs week 8
+-- Expect: Milk 250.3 -> 196.5 per store-day; x 15 stores x 7 days = ~5.6k units/week,
+--         matching A16's ~5.6k for old stores. FnV ~504 -> ~507: no gap.
 SELECT category,
-       ROUND(SUM(received_qty) / 3.0)       AS received_per_week,
-       ROUND(0.2 * SUM(received_qty) / 3.0) AS extra_per_week_at_20pct
-FROM po_clean
-WHERE city = 'Coimbatore' AND po_status = 'CONFIRMED' AND week BETWEEN 6 AND 8
-GROUP BY category;
+       ROUND(1.0 * SUM(units_sold) FILTER (WHERE week BETWEEN 1 AND 5)
+                 / COUNT(DISTINCT (store_id, date)) FILTER (WHERE week BETWEEN 1 AND 5), 1) AS sold_per_store_day_before,
+       ROUND(1.0 * SUM(units_sold) FILTER (WHERE week = 8)
+                 / COUNT(DISTINCT (store_id, date)) FILTER (WHERE week = 8), 1)            AS sold_per_store_day_wk8,
+       COUNT(DISTINCT store_id) AS stores
+FROM daily_clean
+WHERE city = 'Coimbatore' AND is_old_store_open
+GROUP BY category
+ORDER BY category;
 
 
 -- =============== PHASE 10: Red herrings ===============
