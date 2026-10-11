@@ -20,14 +20,14 @@ ORDER BY city, week;
 
 -- =============== PHASE 5: Remove distortions ===============
 
--- A2. Coimbatore: raw vs closures removed vs like-for-like vs new stores
--- Expect week 6: raw 81.07 | old stores incl. closed 83.17 | like-for-like 90.02 | new 74.78
+-- A2. Coimbatore: raw vs closures included vs old stores open days vs new stores
+-- Expect week 6: raw 81.07 | old stores incl. closed 83.17 | old store open 90.02 | new 74.78
 SELECT week,
   ROUND(100.0 * SUM(in_stock_hours) / SUM(operating_hours), 2) AS raw_all,
   ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE NOT is_new_store)
               / SUM(operating_hours) FILTER (WHERE NOT is_new_store), 2) AS old_incl_closed,
-  ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE is_like_for_like)
-              / SUM(operating_hours) FILTER (WHERE is_like_for_like), 2) AS like_for_like,
+  ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE is_old_store_open)
+              / SUM(operating_hours) FILTER (WHERE is_old_store_open), 2) AS old_store_open,
   ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE is_new_store)
               / SUM(operating_hours) FILTER (WHERE is_new_store), 2) AS new_stores
 FROM daily_clean
@@ -38,12 +38,12 @@ ORDER BY week;
 
 -- =============== PHASE 6: Locate the problem ===============
 
--- A3. Like-for-like availability by category and week (Coimbatore)
+-- A3. Old-store open-day availability by category and week (Coimbatore)
 -- Expect: FnV ~96-97 every week; Milk ~94 -> ~79 from week 6
 SELECT category, week,
        ROUND(100.0 * SUM(in_stock_hours) / SUM(operating_hours), 1) AS availability
 FROM daily_clean
-WHERE city = 'Coimbatore' AND is_like_for_like
+WHERE city = 'Coimbatore' AND is_old_store_open
 GROUP BY category, week
 ORDER BY category, week;
 
@@ -59,7 +59,7 @@ WHERE city = 'Coimbatore' AND category = 'Milk' AND NOT is_closed
 GROUP BY store_id
 ORDER BY store_id;
 
--- A5. Milk availability by SKU, before vs after 10 Aug (like-for-like)
+-- A5. Milk availability by SKU, before vs after 10 Aug (old stores, open days)
 -- Expect: all 8 milk SKUs drop together
 SELECT sku_id,
   ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE date <  DATE '2026-08-10')
@@ -67,7 +67,7 @@ SELECT sku_id,
   ROUND(100.0 * SUM(in_stock_hours)  FILTER (WHERE date >= DATE '2026-08-10')
               / SUM(operating_hours) FILTER (WHERE date >= DATE '2026-08-10'), 1) AS after
 FROM daily_clean
-WHERE city = 'Coimbatore' AND category = 'Milk' AND is_like_for_like
+WHERE city = 'Coimbatore' AND category = 'Milk' AND is_old_store_open
 GROUP BY sku_id
 ORDER BY sku_id;
 
@@ -165,14 +165,14 @@ WHERE p.city = 'Coimbatore' AND p.po_status = 'CONFIRMED'
 GROUP BY 1, 2
 ORDER BY 1, 2;
 
--- A13. Demand and wastage per open store-day (like-for-like, Coimbatore)
+-- A13. Demand and wastage per open store-day (old stores, open days, Coimbatore)
 -- Expect: Milk sales ~250 -> ~200 per store-day and wastage ~1.4% -> ~0.4%;
 --         FnV ~500 per store-day and ~11% wastage throughout
 SELECT category, week,
        ROUND(1.0 * SUM(units_sold) / COUNT(DISTINCT (store_id, date)), 1) AS sold_per_store_day,
        ROUND(100.0 * SUM(units_dumped) / SUM(units_sold + units_dumped), 2) AS wastage_pct
 FROM daily_clean
-WHERE city = 'Coimbatore' AND is_like_for_like
+WHERE city = 'Coimbatore' AND is_old_store_open
 GROUP BY category, week
 ORDER BY category, week;
 
@@ -221,11 +221,11 @@ GROUP BY date, city
 ORDER BY dumped DESC
 LIMIT 10;
 
--- A18. Wastage by shelf life (healthy period, like-for-like)
+-- A18. Wastage by shelf life (healthy period, old stores, open days)
 -- Expect: FnV ~11% for 2-, 5- and 7-day items -> no shelf-life effect in this data
 SELECT category, shelf_life_days,
        ROUND(100.0 * SUM(units_dumped) / SUM(units_sold + units_dumped), 2) AS wastage_pct
 FROM daily_clean
-WHERE city = 'Coimbatore' AND is_like_for_like AND date < DATE '2026-08-10'
+WHERE city = 'Coimbatore' AND is_old_store_open AND date < DATE '2026-08-10'
 GROUP BY category, shelf_life_days
 ORDER BY category, shelf_life_days;

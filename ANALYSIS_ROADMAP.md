@@ -32,7 +32,7 @@ The manager's message contains **4 testable claims**:
 | Fill rate | received ÷ ordered, confirmed POs only | Measures the vendor on orders it accepted |
 | Wastage | dumped ÷ (sold + dumped) | Comes from one table, so no join risk |
 | Week | 7-day blocks starting Monday 6 July | Gives exactly 8 full weeks |
-| Like-for-like base | Stores that existed before the period, open days only | Removes distortion from new stores and closures |
+| Old stores, open days | Stores that existed before the period, open days only | Removes distortion from new stores and closures |
 
 ---
 
@@ -51,7 +51,7 @@ The manager's message contains **4 testable claims**:
 | 7 | **Sold + dumped > received** on some days | Stock carries over between days | Don't assume each day starts from zero |
 | 8 | Duplicates, missing days, negative values, received > ordered | Checked; none found | Mention that you checked |
 
-**Output:** a clean daily table, a clean PO table and a clean GRN table, each with flags for *closed*, *new store* and *like-for-like*, plus a "data issues" note for the submission.
+**Output:** a clean daily table, a clean PO table and a clean GRN table, each with flags for *closed*, *new store* and *old store open*, plus a "data issues" note for the submission.
 
 ---
 
@@ -69,9 +69,9 @@ The manager's message contains **4 testable claims**:
 
 **Goal:** separate measurement noise from a real problem.
 
-- Compare weekly availability three ways: **all stores**, **like-for-like**, **new stores only**.
+- Compare weekly availability three ways: **all stores**, **old store open**, **new stores only**.
 - Measure the effect of closures alone: week 6 is about 83% with closed days and about 90% without.
-- **Conclusion:** the real like-for-like drop is about **96% → 90%** (about 6 points, not 8), and it starts **in week 6**. The rest comes from closures and new stores ramping up.
+- **Conclusion:** the real drop (old stores, open days) is about **96% → 90%** (about 6 points, not 8), and it starts **in week 6**. The rest comes from closures and new stores ramping up.
 
 ---
 
@@ -157,7 +157,7 @@ The manager's message contains **4 testable claims**:
 | 4 | If needed, a temporary, milk-only top-up reviewed daily, not a blanket +20% | Supply planning | Interim |
 | 5 | Report new stores and closures separately in availability reporting | Analytics | Ongoing |
 
-**Monitor next week:** V03 daily fill rate, like-for-like milk availability, FnV wastage.
+**Monitor next week:** V03 daily fill rate, old-store open-day milk availability, FnV wastage.
 
 ---
 
@@ -165,7 +165,7 @@ The manager's message contains **4 testable claims**:
 
 1. **Recommendation tab:** decision, 3-line summary, at most 5 key numbers, actions with owner and deadline.
 2. **Analysis tabs:** one per finding, each with a one-line purpose in cell B2:
-   - `A_headline_vs_clean`: raw vs like-for-like weekly availability
+   - `A_headline_vs_clean`: raw vs old stores on open days weekly availability
    - `B_category_split`: Milk vs FnV weekly
    - `C_vendor_fill_rate`: weekly fill rate by vendor plus the daily break on 10 Aug
    - `D_funnel`: ordered → received → sold → dumped, before vs after

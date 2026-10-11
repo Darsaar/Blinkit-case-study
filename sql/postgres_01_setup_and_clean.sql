@@ -86,7 +86,7 @@ SELECT d.*,
        FLOOR((d.date::date - DATE '2026-07-06') / 7.0)::int + 1      AS week,
        (c.store_id IS NOT NULL)                                       AS is_closed,
        (s.launch_date >= DATE '2026-07-06')                           AS is_new_store,
-       (c.store_id IS NULL AND s.launch_date < DATE '2026-07-06')     AS is_like_for_like
+       (c.store_id IS NULL AND s.launch_date < DATE '2026-07-06')     AS is_old_store_open
 FROM daily_store_sku d
 JOIN stores s ON s.store_id = d.store_id
 JOIN skus   k ON k.sku_id   = d.sku_id
@@ -109,11 +109,11 @@ JOIN skus   k ON k.sku_id   = p.sku_id
 LEFT JOIN store_closures c ON c.store_id = p.store_id AND c.date = p.po_date;
 
 -- ---------- Sanity checks ----------
--- Expect: 33726 rows | 242 closed | 2926 new-store | 30558 like-for-like
+-- Expect: 33726 rows | 242 closed | 2926 new-store | 30558 old-store-open
 SELECT COUNT(*),
        COUNT(*) FILTER (WHERE is_closed),
        COUNT(*) FILTER (WHERE is_new_store),
-       COUNT(*) FILTER (WHERE is_like_for_like)
+       COUNT(*) FILTER (WHERE is_old_store_open)
 FROM daily_clean;
 
 -- Expect: 33726 POs | 33115 received | 611 cancelled | 242 on closed days

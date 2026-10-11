@@ -9,7 +9,7 @@ SELECT d.*,
        CAST((julianday(d.date) - julianday('2026-07-06')) / 7 AS INT) + 1 AS week,
        CASE WHEN c.store_id IS NOT NULL THEN 1 ELSE 0 END AS is_closed,
        CASE WHEN s.launch_date >= '2026-07-06' THEN 1 ELSE 0 END AS is_new_store,
-       CASE WHEN c.store_id IS NULL AND s.launch_date < '2026-07-06' THEN 1 ELSE 0 END AS is_like_for_like
+       CASE WHEN c.store_id IS NULL AND s.launch_date < '2026-07-06' THEN 1 ELSE 0 END AS is_old_store_open
 FROM daily_store_sku d
 JOIN stores s ON s.store_id = d.store_id
 JOIN skus k   ON k.sku_id   = d.sku_id
