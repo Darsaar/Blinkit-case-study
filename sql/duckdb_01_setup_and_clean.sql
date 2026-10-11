@@ -21,6 +21,19 @@ CREATE OR REPLACE TABLE store_closures  AS SELECT * FROM read_csv_auto('store_cl
 -- ALTER TABLE stores          ALTER COLUMN launch_date TYPE DATE USING epoch_ms(TRY_CAST(launch_date AS BIGINT))::DATE;
 -- ALTER TABLE store_closures  ALTER COLUMN date        TYPE DATE USING epoch_ms(TRY_CAST(date AS BIGINT))::DATE;
 
+-- ---------- Step 1c (only if DESCRIBE shows the date columns as VARCHAR) ----------
+-- Remove the -- to run. Handles text dates like '2026-07-06' and text numbers like '1783296000000'.
+-- ALTER TABLE daily_store_sku ALTER COLUMN date        TYPE DATE
+--   USING COALESCE(TRY_CAST(date AS DATE),        epoch_ms(TRY_CAST(date AS BIGINT))::DATE);
+-- ALTER TABLE purchase_orders ALTER COLUMN po_date     TYPE DATE
+--   USING COALESCE(TRY_CAST(po_date AS DATE),     epoch_ms(TRY_CAST(po_date AS BIGINT))::DATE);
+-- ALTER TABLE grn             ALTER COLUMN grn_date    TYPE DATE
+--   USING COALESCE(TRY_CAST(grn_date AS DATE),    epoch_ms(TRY_CAST(grn_date AS BIGINT))::DATE);
+-- ALTER TABLE stores          ALTER COLUMN launch_date TYPE DATE
+--   USING COALESCE(TRY_CAST(launch_date AS DATE), epoch_ms(TRY_CAST(launch_date AS BIGINT))::DATE);
+-- ALTER TABLE store_closures  ALTER COLUMN date        TYPE DATE
+--   USING COALESCE(TRY_CAST(date AS DATE),        epoch_ms(TRY_CAST(date AS BIGINT))::DATE);
+
 -- ---------- Step 2: cleaned tables ----------
 
 -- GRN without the duplicate rows
