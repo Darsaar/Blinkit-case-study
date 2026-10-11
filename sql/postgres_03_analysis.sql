@@ -71,14 +71,14 @@ WHERE city = 'Coimbatore' AND category = 'Milk' AND is_old_store_open
 GROUP BY sku_id
 ORDER BY sku_id;
 
--- A6. Daily availability around the break, stores that never closed
--- Expect: ~96.7 up to 9 Aug, ~90 from Mon 10 Aug -> not caused by maintenance
+-- A6. Daily availability in weeks 5-6 (full week before and after the break), stores that never closed
+-- Expect: ~95-97 from 3 to 9 Aug, ~89-91 from Mon 10 Aug -> not caused by maintenance
 SELECT date,
        ROUND(100.0 * SUM(in_stock_hours) / SUM(operating_hours), 1) AS availability
 FROM daily_clean
 WHERE city = 'Coimbatore' AND NOT is_new_store
   AND store_id NOT IN (SELECT DISTINCT store_id FROM store_closures)
-  AND date BETWEEN DATE '2026-08-05' AND DATE '2026-08-16'
+  AND date BETWEEN DATE '2026-08-03' AND DATE '2026-08-16'
 GROUP BY date
 ORDER BY date;
 
