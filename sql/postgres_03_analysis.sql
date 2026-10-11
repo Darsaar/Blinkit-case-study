@@ -354,6 +354,52 @@ FROM by_group
 GROUP BY week, category
 ORDER BY category, week;
 
+-- A16d. Same as A16c, but split into old vs new stores
+-- Expect:
+--   FnV  old: ~91-92% of the extra wasted every week (11.0k / 11.6k / 11.8k)
+--   FnV  new: week 6 fully used (stores still filling shelves), then 80% / 91% wasted
+--   Milk old: nothing wasted, ~1.2-1.5k still unmet every week (the V03 gap)
+--   Milk new: nothing wasted, unmet shrinking 1.2k -> 0.5k -> 0.4k as stores settle
+WITH shelf AS (
+  SELECT week, category,
+         CASE WHEN is_new_store THEN 'new' ELSE 'old' END AS store_group,
+         SUM(units_sold)   AS sold,
+         SUM(units_dumped) AS dumped,
+         SUM(CASE WHEN in_stock_hours > 0
+                  THEN units_sold / in_stock_hours * (operating_hours - in_stock_hours)
+                  ELSE 0 END) AS extra_needed
+  FROM daily_clean
+  WHERE city = 'Coimbatore' AND NOT is_closed AND week BETWEEN 6 AND 8
+  GROUP BY 1, 2, 3
+),
+supply AS (
+  SELECT week, category,
+         CASE WHEN is_new_store THEN 'new' ELSE 'old' END AS store_group,
+         SUM(received_qty) AS received
+  FROM po_clean
+  WHERE city = 'Coimbatore' AND po_status = 'CONFIRMED' AND week BETWEEN 6 AND 8
+  GROUP BY 1, 2, 3
+),
+by_group AS (
+  SELECT s.week, s.category, s.store_group,
+         p.received, s.sold, s.dumped, s.extra_needed,
+         0.2 * p.received                        AS extra_from_plan,
+         LEAST(0.2 * p.received, s.extra_needed) AS extra_that_sells
+  FROM shelf s JOIN supply p USING (week, category, store_group)
+)
+SELECT week, category, store_group,
+       SUM(received)                                                        AS received,
+       ROUND(100.0 * SUM(dumped) / SUM(sold + dumped), 1)                   AS wastage_pct_now,
+       ROUND(SUM(extra_needed))                                             AS extra_needed,
+       ROUND(SUM(extra_from_plan))                                          AS extra_from_plus_20,
+       ROUND(SUM(extra_that_sells))                                         AS extra_that_sells,
+       ROUND(SUM(extra_from_plan - extra_that_sells))                       AS extra_wasted,
+       ROUND(100.0 * SUM(extra_from_plan - extra_that_sells) / SUM(extra_from_plan), 1) AS pct_of_extra_wasted,
+       ROUND(SUM(extra_needed - extra_that_sells))                          AS demand_still_unmet
+FROM by_group
+GROUP BY week, category, store_group
+ORDER BY category, store_group, week;
+
 -- =============== PHASE 10: Red herrings ===============
 
 -- A17. Biggest single-day dumping by city
