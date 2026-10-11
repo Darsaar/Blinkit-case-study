@@ -83,7 +83,7 @@ SELECT d.*,
        s.launch_date,
        k.category,
        k.shelf_life_days,
-       (d.date - DATE '2026-07-06') / 7 + 1                          AS week,
+       FLOOR((d.date::date - DATE '2026-07-06') / 7.0)::int + 1      AS week,
        (c.store_id IS NOT NULL)                                       AS is_closed,
        (s.launch_date >= DATE '2026-07-06')                           AS is_new_store,
        (c.store_id IS NULL AND s.launch_date < DATE '2026-07-06')     AS is_like_for_like
@@ -99,7 +99,7 @@ SELECT p.*,
        g.received_qty,
        s.city,
        k.category,
-       (p.po_date - DATE '2026-07-06') / 7 + 1                        AS week,
+       FLOOR((p.po_date::date - DATE '2026-07-06') / 7.0)::int + 1   AS week,
        (c.store_id IS NOT NULL)                                       AS is_closed,
        (s.launch_date >= DATE '2026-07-06')                           AS is_new_store
 FROM purchase_orders p
